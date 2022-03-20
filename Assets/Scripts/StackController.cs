@@ -6,35 +6,46 @@ public class StackController : MonoBehaviour
 {
     List<Transform> stackList = new List<Transform>();
     [SerializeField] Transform sphere;
+    [SerializeField] float _jumpDuration = 0.35f;
     [SerializeField] float upModifierY = 1.26f;
-     
+    [SerializeField] float coDurationUp, coDurationDown;
+
     void Start()
     {
         stackList.Add(sphere);
     }
-  
+  IEnumerator CoJump(Collider other,int upOrDown,float duration)
+    {
+        int stackCount = stackList.Count;
+    
+        for (int i = stackCount-1; i >=0; i--)
+        {
+            WaitForSeconds wait = new WaitForSeconds(duration);
+           
+            stackList[i].DOLocalJump(new Vector3(0, upModifierY*upOrDown, 0f), 1, 1, _jumpDuration).SetRelative().SetEase(Ease.InSine);
+           
+            yield return wait;
+        
+        }
+       
+    }
     private void OnTriggerEnter(Collider other)
     {
         if (other.tag=="greenCube")
         {
-
-          
-            foreach (var item in stackList)
-            {
-                item.DOLocalJump(new Vector3(0, upModifierY, 0f), 1, 1, 0.35f).SetRelative().SetEase(Ease.InSine);
-            }
-           
+            StartCoroutine(CoJump(other,1,coDurationUp));
             other.transform.SetParent(transform);
             stackList.Add(other.transform);
-        
-            other.transform.DOLocalMove(Vector3.zero, 0.35f);
-
+            other.transform.DOLocalMove(Vector3.zero, _jumpDuration);
             other.enabled = false;
         }
+
         if (other.tag == "obstacle")
         {
+          
             if (stackList.Count>0)
             {
+
                 stackList[stackList.Count - 1].SetParent(transform.parent);
                 stackList.RemoveAt(stackList.Count - 1);
 
@@ -42,28 +53,17 @@ public class StackController : MonoBehaviour
                 {
                     transform.GetComponent<CharacterController>().Speed = 0; //GameOver
                 }
-                StartCoroutine(wait());
-                other.enabled = false;
+                StartCoroutine(WaitForFall(other));
+             
             }
-          
-       
-         
-
+            other.enabled = false;
         }
     }
-    IEnumerator wait()
+    IEnumerator WaitForFall(Collider other)
     {
         yield return new WaitForSeconds(0.3f);
-        foreach (var item in stackList)
-        {
-            item.DOLocalJump(new Vector3(0, -upModifierY, 0f), 1, 1, 0.32f).SetRelative().SetEase(Ease.OutSine);
-        }
+        StartCoroutine(CoJump(other, -1,coDurationDown));
     }
 
-    
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+   
 }
