@@ -4,7 +4,13 @@ using UnityEngine;
 
 public class CharacterController : MonoBehaviour
 {
-    [SerializeField] int speed = 10;
+    [SerializeField] float speed = 10;
+    public float Speed 
+    {
+        get { return speed; }  
+        set { speed= value; }
+
+    }
     [SerializeField] float maxSwerve = 1f; 
     float lastPosX;
     float moveX;
